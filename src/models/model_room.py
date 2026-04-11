@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, JSON
 from sqlalchemy.orm import DeclarativeBase
 from pydantic import BaseModel, Field
 
@@ -13,4 +13,3 @@ class Rooms(Base):
 class RoomCreateModel(BaseModel):
     name: str = Field(..., description="Название комнаты", min_length=1, max_length=50)
     places: int = Field(..., description="Количество мест", ge=1, le=1000)
-
