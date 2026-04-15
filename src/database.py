@@ -32,6 +32,14 @@ def get_db_user():
     finally:
         db.close()
 
+def is_sess(model, session):
+    pers = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
+    if pers.tk_end > time():
+        pers.tk +=  1*60
+        return True
+    else:
+        return False
+
 def reg(model, session):
     existing = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
     if existing:
@@ -50,8 +58,9 @@ def auth(resp, model, session):
     try:
         pers = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
         print(pers.name)
-        tok = tokenizer.generate(pers.name, pers.password)
+        tok = tokenizer.generate(pers.name)
         pers.token = tok
+        pers.tk_end = time().__int__() + 1 * 60
         session.commit()
         resp.set_cookie(key = "session", value = tok)
         print(tok)
