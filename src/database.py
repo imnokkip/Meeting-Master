@@ -87,30 +87,24 @@ def auth(resp, model, session):
             model_user.Users.name == model.name
         ).first()
         
-        if not pers or pers.password != model.password:  # Временно, пока нет хеширования
+        if not pers or pers.password != model.password:
+            print("Auth failed: user not found or password mismatch")
             return False
             
-        tok = tokenizer.generate(pers.name, pers.password)
+        tok = str(tokenizer.generate(pers.name, pers.password))
+        print(f"Generated token: {tok}")  # Отладка
+        
         pers.token = tok
-        pers.tk_end = int(time()) + 86400  # Токен живет 24 часа
+        pers.tk_end = int(time()) + 86400
         session.commit()
+        
         resp.set_cookie(key="session", value=tok, httponly=True)
+        print(f"Cookie set: session={tok}")  # Отладка
         return True
     except Exception as e:
-        session.rollback()
         print(f"Auth error: {e}")
+        session.rollback()
         return False
-    
-def veryfi(session, tok):
-    pers = session.query(model_user.Users).filter(model_user.Users.token == tok).first()
-    if pers:
-        if pers.tk_end >= time().__int__():
-            print('ok')
-            return True
-    else:
-        print('end tk')
-        return False
-
 
 
 def get_all(session):

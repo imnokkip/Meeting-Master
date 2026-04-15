@@ -7,17 +7,16 @@ router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
 @router.get('/', name="Rooms", description="Список комнат", tags=["Rooms"])
 async def rooms(db_room: Session = Depends(get_db_room)):
-    # Для списка комнат проверка не обязательна (можно оставить открытым)
     return get_all(db_room)
 
 @router.post("/create")
 async def create(
     room: model_room.RoomCreateModel, 
     db_room: Session = Depends(get_db_room),
-    db_user: Session = Depends(get_db_user),  # Добавляем БД пользователей
-    session_token: str = Cookie(None)  # Получаем токен из куки
+    db_user: Session = Depends(get_db_user),
+    session_token: str = Cookie(None)
 ):
-    # Проверяем авторизацию
+
     if not session_token or not check_token(db_user, session_token):
         raise HTTPException(status_code=401, detail="Не авторизован")
     
@@ -30,10 +29,10 @@ async def create(
 async def delete(
     room_id: int, 
     db_room: Session = Depends(get_db_room),
-    db_user: Session = Depends(get_db_user),  # Добавляем БД пользователей
-    session_token: str = Cookie(None)  # Получаем токен из куки
+    db_user: Session = Depends(get_db_user),
+    session_token: str = Cookie(None)
 ):
-    # Проверяем авторизацию
+
     if not session_token or not check_token(db_user, session_token):
         raise HTTPException(status_code=401, detail="Не авторизован")
     
