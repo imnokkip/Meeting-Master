@@ -34,7 +34,6 @@ def get_db_user():
 
 
 def check_token(session_user, token):
-    """Проверяет валидность токена"""
     if not token:
         return False
     
@@ -45,7 +44,6 @@ def check_token(session_user, token):
     if not user:
         return False
     
-    # Проверяем время жизни (если tk_end установлен)
     current_time = int(time())
     if user.tk_end and user.tk_end < current_time:
         return False
@@ -88,21 +86,17 @@ def auth(resp, model, session):
         ).first()
         
         if not pers or pers.password != model.password:
-            print("Auth failed: user not found or password mismatch")
             return False
             
         tok = str(tokenizer.generate(pers.name, pers.password))
-        print(f"Generated token: {tok}")  # Отладка
         
         pers.token = tok
-        pers.tk_end = int(time()) + 86400
+        pers.tk_end = int(time()) + 60
         session.commit()
         
-        resp.set_cookie(key="session", value=tok, httponly=True)
-        print(f"Cookie set: session={tok}")  # Отладка
+        resp.set_cookie(key="session_token", value=tok, httponly=True)
         return True
     except Exception as e:
-        print(f"Auth error: {e}")
         session.rollback()
         return False
 

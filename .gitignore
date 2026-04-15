@@ -30,6 +30,9 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+.sql_rooms.db
+.sql_users.db
+
 
 # UV specific (опционально — если хочешь сохранять состояние установки)
 # uv-installed-packages.txt
