@@ -48,7 +48,7 @@
 
 3. Запусти сервер:
    ```bash
-   uvicorn main:app --reload
+   python main.py
    ```
 
 4. Открой в браузере `http://127.0.0.1:8000/docs` для доступа к Swagger-документации.
