@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from models import model_room
-from database import get_db_room, add, get_all, delete_id
+from database import get_db_room, add, get_all, delete_id, get_db_user, veryfi
 
 router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
@@ -11,6 +11,7 @@ async def rooms(db: Session = Depends(get_db_room)):
 
 @router.post("/create")
 async def create(room: model_room.RoomCreateModel, db: Session = Depends(get_db_room)):
+    
     out = add(room, db)
     if out:
         return {"msg":"ok"}

@@ -2,7 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from models import model_room, model_user
+from time import time
+import tokenizer
 
+print(time().__int__())
 
 DB_ROOM_URL = "sqlite:///./db/sql_rooms.db"
 room_engine = create_engine(DB_ROOM_URL, connect_args={"check_same_thread": False})
@@ -42,6 +45,32 @@ def reg(model, session):
     except IntegrityError:
         session.rollback()
         return False
+    
+def auth(resp, model, session):
+    try:
+        pers = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
+        print(pers.name)
+        tok = tokenizer.generate(pers.name, pers.password)
+        pers.token = tok
+        session.commit()
+        resp.set_cookie(key = "session", value = tok)
+        print(tok)
+        return True
+    except IntegrityError:
+        session.rollback()
+        return False
+    
+def veryfi(session, tok):
+    pers = session.query(model_user.Users).filter(model_user.Users.token == tok).first()
+    if pers:
+        if pers.tk_end >= time().__int__():
+            print('ok')
+            return True
+    else:
+        print('end tk')
+        return False
+
+
 
 def get_all(session):
     vals = session.query(model_room.Rooms).all()

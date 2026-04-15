@@ -10,6 +10,9 @@ class Users(Base):
     name = Column(String, unique=True)
     password = Column(String)
     registers = Column(JSON, nullable=True)
+    acces_level = Column(Integer, nullable=True)
+    token = Column(String, unique=True)
+    tk_end = Column(Integer)
 
 class UserCreateModel(BaseModel):
     name: str = Field(..., description="Имя", min_length=4, max_length=50)
