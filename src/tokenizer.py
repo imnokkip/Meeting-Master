@@ -1,10 +1,12 @@
 import bcrypt
 
 salt = bcrypt.gensalt()
-def generate(name):
-   out = bcrypt.hashpw(name.encode(), salt = salt)
-   print(out)
-   return out
 
-def cooky_token_set(resp, token):
-    resp.set_cookie(key = "session", value = token)
+def generate(name, password):
+    combined = f"{name}:{password}"
+    out = bcrypt.hashpw(combined.encode(), salt=salt)
+    return out
+
+def verify_token(token, name, password):
+    combined = f"{name}:{password}"
+    return bcrypt.checkpw(combined.encode(), token)

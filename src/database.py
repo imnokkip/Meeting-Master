@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
 from models import model_room, model_user
 from time import time
@@ -32,13 +32,40 @@ def get_db_user():
     finally:
         db.close()
 
-def is_sess(model, session):
-    pers = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
-    if pers.tk_end > time():
-        pers.tk +=  1*60
-        return True
-    else:
+
+def check_token(session_user, token):
+    """Проверяет валидность токена"""
+    if not token:
         return False
+    
+    user = session_user.query(model_user.Users).filter(
+        model_user.Users.token == token
+    ).first()
+    
+    if not user:
+        return False
+    
+    # Проверяем время жизни (если tk_end установлен)
+    current_time = int(time())
+    if user.tk_end and user.tk_end < current_time:
+        return False
+    
+    return True
+
+def get_current_user_from_token(token: str, db_user: Session):
+    user = db_user.query(model_user.Users).filter(
+        model_user.Users.token == token
+    ).first()
+    
+    if not user:
+        return None
+    
+    # Проверка времени жизни
+    current_time = int(time())
+    if user.tk_end and user.tk_end < current_time:
+        return None
+    
+    return user
 
 def reg(model, session):
     existing = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
@@ -56,17 +83,22 @@ def reg(model, session):
     
 def auth(resp, model, session):
     try:
-        pers = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
-        print(pers.name)
-        tok = tokenizer.generate(pers.name)
+        pers = session.query(model_user.Users).filter(
+            model_user.Users.name == model.name
+        ).first()
+        
+        if not pers or pers.password != model.password:  # Временно, пока нет хеширования
+            return False
+            
+        tok = tokenizer.generate(pers.name, pers.password)
         pers.token = tok
-        pers.tk_end = time().__int__() + 1 * 60
+        pers.tk_end = int(time()) + 86400  # Токен живет 24 часа
         session.commit()
-        resp.set_cookie(key = "session", value = tok)
-        print(tok)
+        resp.set_cookie(key="session", value=tok, httponly=True)
         return True
-    except IntegrityError:
+    except Exception as e:
         session.rollback()
+        print(f"Auth error: {e}")
         return False
     
 def veryfi(session, tok):
