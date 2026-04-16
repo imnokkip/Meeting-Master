@@ -1,45 +1,33 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
-from models import model_room, model_user
+from models.model import Rooms, Users, Base
 from time import time
 import tokenizer
 
 print(time().__int__())
 
-DB_ROOM_URL = "sqlite:///./db/sql_rooms.db"
-room_engine = create_engine(DB_ROOM_URL, connect_args={"check_same_thread": False})
-SessionRoom = sessionmaker(autoflush=False, bind=room_engine)
-model_room.Base.metadata.create_all(bind=room_engine)
+DB_URL = "sqlite:///./db/sql.db"
+engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autoflush=False, bind=engine)
+
+# Создаем обе таблицы (Rooms и Users) в одном файле
+Base.metadata.create_all(bind=engine)
 
 
-DB_USER_URL = "sqlite:///./db/sql_users.db"
-user_engine = create_engine(DB_USER_URL, connect_args={"check_same_thread": False})
-SessionUser = sessionmaker(autoflush=False, bind=user_engine)
-model_user.Base.metadata.create_all(bind=user_engine)
-
-def get_db_room():
-    db = SessionRoom()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def get_db_user():
-    db = SessionUser()
+def get_db():
+    db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
 
-def check_token(session_user, token):
+def check_token(session_user: Session, token: str):
     if not token:
         return False
     
-    user = session_user.query(model_user.Users).filter(
-        model_user.Users.token == token
-    ).first()
+    user = session_user.query(Users).filter(Users.token == token).first()
     
     if not user:
         return False
@@ -50,40 +38,38 @@ def check_token(session_user, token):
     
     return True
 
+
 def get_current_user_from_token(token: str, db_user: Session):
-    user = db_user.query(model_user.Users).filter(
-        model_user.Users.token == token
-    ).first()
+    user = db_user.query(Users).filter(Users.token == token).first()
     
     if not user:
         return None
     
-    # Проверка времени жизни
     current_time = int(time())
     if user.tk_end and user.tk_end < current_time:
         return None
     
     return user
 
-def reg(model, session):
-    existing = session.query(model_user.Users).filter(model_user.Users.name == model.name).first()
+
+def reg(model, session: Session):
+    existing = session.query(Users).filter(Users.name == model.name).first()
     if existing:
         return False
     
     try:
-        new_usr = model_user.Users(name=model.name, password=model.password)
+        new_usr = Users(name=model.name, password=model.password)
         session.add(new_usr)
         session.commit()
         return True
     except IntegrityError:
         session.rollback()
         return False
-    
-def auth(resp, model, session):
+
+
+def auth(resp, model, session: Session):
     try:
-        pers = session.query(model_user.Users).filter(
-            model_user.Users.name == model.name
-        ).first()
+        pers = session.query(Users).filter(Users.name == model.name).first()
         
         if not pers or pers.password != model.password:
             return False
@@ -101,29 +87,28 @@ def auth(resp, model, session):
         return False
 
 
-def get_all(session):
-    vals = session.query(model_room.Rooms).all()
-    s = []
-    for p in vals:
-        s.append(p)
-    return s
+def get_all(session: Session):
+    vals = session.query(Rooms).all()
+    return vals
 
-def add(model ,session):
-    existing = session.query(model_room.Rooms).filter(model_room.Rooms.name == model.name).first()
+
+def add(model, session: Session):
+    existing = session.query(Rooms).filter(Rooms.name == model.name).first()
     if existing:
         return False
     
     try:
-        new_room = model_room.Rooms(name=model.name, places=model.places)
+        new_room = Rooms(name=model.name, places=model.places)
         session.add(new_room)
         session.commit()
         return True
     except IntegrityError:
         session.rollback()
         return False
-    
-def delete_id(ids, session):
-    room = session.query(model_room.Rooms).filter(model_room.Rooms.id == ids).first()
+
+
+def delete_id(ids: int, session: Session):
+    room = session.query(Rooms).filter(Rooms.id == ids).first()
     if not room:
         return False
     try:
