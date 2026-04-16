@@ -1,26 +1,31 @@
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from models.model import Rooms, Users, Base
 from time import time
 import tokenizer
+import os
+from dotenv import load_dotenv
 
-print(time().__int__())
+load_dotenv()
 
-DB_URL = "sqlite:///./db/sql.db"
-engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
+PWD = os.getenv("pass")
+USR = os.getenv("name")
+
+DB_URL = "postgresql+asyncpg://{USR}:{PWD}@localhost:5432/appdb"
+engine = create_async_engine(DB_URL, pool_size=20, max_overflow=10,echo=False)
 SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
-# Создаем обе таблицы (Rooms и Users) в одном файле
-Base.metadata.create_all(bind=engine)
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    async with AsyncSession(engine) as db:
+        try:
+            yield db
+        finally:
+            db.close()
 
 
 def check_token(session_user: Session, token: str):
