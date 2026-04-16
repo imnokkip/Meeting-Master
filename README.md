@@ -6,9 +6,9 @@
 
 ## 📌 О проекте
 
-На данный момент `Meeting Master` предоставляет REST API для управления переговорными комнатами. Пользователи могут регистрироваться, входить в систему (авторизация через токены в cookies), просматривать список комнат, а также создавать и удалять их (последние два действия — только для авторизованных пользователей).
+`Meeting Master` предоставляет REST API для управления переговорными комнатами. Пользователи могут регистрироваться, входить в систему (авторизация через токены в cookies), просматривать список комнат, а также создавать и удалять их (последние два действия — только для авторизованных пользователей).
 
-Проект написан на **FastAPI** с использованием двух отдельных баз данных **SQLite**: одна для комнат, другая для пользователей и сессий.
+Проект написан на **FastAPI** с использованием **PostgreSQL** в качестве основной базы данных (через Docker) и полностью контейнеризирован для удобного развертывания.
 
 ---
 
@@ -17,8 +17,9 @@
 - **Регистрация и аутентификация пользователей** через cookies.
 - **Просмотр списка всех комнат** (доступен всем).
 - **Создание и удаление комнат** (только для авторизованных пользователей).
-- **Разделение БД** для комнат и пользователей.
+- **PostgreSQL** в Docker для надежного хранения данных.
 - **Токены доступа с ограниченным временем жизни**.
+- **Готов к развертыванию** с помощью Docker Compose.
 
 ---
 
@@ -26,29 +27,31 @@
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-100000?style=for-the-badge&logo=sqlalchemy&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
 ![Uvicorn](https://img.shields.io/badge/Uvicorn-499848?style=for-the-badge&logo=uvicorn&logoColor=white)
 ![UV](https://img.shields.io/badge/UV-4B32C3?style=for-the-badge&logo=uv&logoColor=white)
 
 ---
 
-## 🖥️ Запуск
+## 🖥️ Запуск через Docker
 
 1. Клонируй репозиторий:
    ```bash
    git clone https://github.com/imnokkip/Meeting-Master
-   cd Meeting-Master/src
+   cd Meeting-Master
    ```
 
-2. Установи зависимости (рекомендуется использовать `uv`):
+2. Скопируй и настрой переменные окружения:
    ```bash
-   uv sync
+   cp .env.example .env
+   Отредактируй .env при необходимости
    ```
 
-3. Запусти сервер:
+3. Запусти Docker:
    ```bash
-   python main.py
+   docker-compose up -d
    ```
 
 4. Открой в браузере `http://127.0.0.1:8000/docs` для доступа к Swagger-документации.
