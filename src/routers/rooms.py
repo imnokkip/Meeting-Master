@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Cookie
 from sqlalchemy.orm import Session
-from models.model import RoomCreateModel
-from database import get_db, add, get_all, delete_id, check_token
+from src.models.model import RoomCreateModel
+from src.database import get_db, add, get_all, delete_id, check_token
 
 router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
 @router.get('/', name="Rooms", description="Список комнат", tags=["Rooms"])
 async def rooms(db: Session = Depends(get_db)):
-    return get_all(db)
+    return await get_all(db)
 
 @router.post("/create")
 async def create(
@@ -16,10 +16,10 @@ async def create(
     session_token: str = Cookie(None)
 ):
 
-    if not session_token or not check_token(db, session_token):
+    if not session_token or not await check_token(db, session_token):
         raise HTTPException(status_code=401, detail="Не авторизован")
     
-    out = add(room, db)
+    out = await add(room, db)
     if out:
         return {"msg": "ok"}
     raise HTTPException(status_code=400, detail="Ошибка создания")
@@ -31,10 +31,10 @@ async def delete(
     session_token: str = Cookie(None)
 ):
 
-    if not session_token or not check_token(db, session_token):
+    if not session_token or not await check_token(db, session_token):
         raise HTTPException(status_code=401, detail="Не авторизован")
     
-    dele = delete_id(room_id, db)
+    dele = await delete_id(room_id, db)
     if dele:
         return {"msg": f"ok, id[{room_id}] is delete"}
     else:
