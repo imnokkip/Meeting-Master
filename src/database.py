@@ -8,22 +8,21 @@ from src import tokenizer
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 PWD = os.getenv("pass")
 USR = os.getenv("name")
-
 DB_URL = os.getenv("DATABASE_URL")
-engine = create_async_engine(DB_URL, pool_size=20, max_overflow=10, echo=True)
 
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+class DB_eng():
+    load_dotenv()
+    engine = create_async_engine(DB_URL, pool_size=20, max_overflow=10, echo=True)
+    AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 async def init_db():
-    async with engine.begin() as conn:
+    async with DB_eng.engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_db():
-    async with AsyncSessionLocal() as db:
+    async with DB_eng.AsyncSessionLocal() as db:
         try:
             yield db
             await db.commit()
@@ -82,7 +81,6 @@ async def reg(model, session: AsyncSession):
         return False
 
 async def auth(resp, model, session: AsyncSession):
-    print("start!")
     try:
         pers = (await session.execute(
             select(Users).where(Users.name == model.name)

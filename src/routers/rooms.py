@@ -3,13 +3,13 @@ from sqlalchemy.orm import Session
 from src.models.model import RoomCreateModel
 from src.database import get_db, add, get_all, delete_id, check_token
 
-router = APIRouter(prefix="/rooms", tags=["Rooms"])
+ROUTER = APIRouter(prefix="/rooms", tags=["Rooms"])
 
-@router.get('/', name="Rooms", description="Список комнат", tags=["Rooms"])
+@ROUTER.get('/', name="Rooms", description="Список комнат", tags=["Rooms"])
 async def rooms(db: Session = Depends(get_db)):
     return await get_all(db)
 
-@router.post("/create")
+@ROUTER.post("/create")
 async def create(
     room: RoomCreateModel, 
     db: Session = Depends(get_db),
@@ -24,7 +24,7 @@ async def create(
         return {"msg": "ok"}
     raise HTTPException(status_code=400, detail="Ошибка создания")
 
-@router.delete("/delete/{room_id}")
+@ROUTER.delete("/delete/{room_id}")
 async def delete(
     room_id: int, 
     db: Session = Depends(get_db),
